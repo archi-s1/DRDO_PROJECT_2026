@@ -1,73 +1,93 @@
-# React + TypeScript + Vite
+# O₂ Sentinel — Environmental Monitoring Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O₂ Sentinel is a state-of-the-art, premium environmental telemetry dashboard built with **React**, **TypeScript**, and **Vite**. Inspired by clean, premium Apple/iOS dark-mode aesthetics, this dashboard provides real-time monitoring, analytics, and forecast metrics for vital atmospheric conditions: **Oxygen Concentration**, **Temperature**, and **Humidity**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Key Features
 
-## React Compiler
+### 1. Premium iOS-Inspired Design System (`src/index.css`)
+*   **Aesthetics**: Glassmorphism (`backdrop-filter: blur`), dark mode palettes, deep rich backgrounds, and harmonious pastel-saturated accents (`system-blue`, `system-green`, `system-orange`, `system-red`).
+*   **Micro-Animations**: Custom loader animations, smooth state transitions, pulsing status beacons, warning banners, and button interactions.
+*   **Responsive Layout**: Adapts gracefully from mobile viewports to large-screen dashboard panels, transitioning from a top navbar to an advanced desktop layout with a sidebar.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Interactive Telemetry Simulation (`src/App.tsx`)
+*   **Nominal Telemetry Drift**: Naturally drifts and fluctuates telemetry values every 1.5 seconds.
+*   **Simulate Drift/Anomaly Toggle**: Allows users to force-drift the variables into warning and danger zones to test safety protocols.
+*   **Dynamic Alarm Banner**: Displays alerts with pulsating borders when thresholds are breached.
+*   **Live Digital Log Console**: Features an auto-scrolling terminal feed documenting every telemetry sync checklist event.
 
-## Expanding the ESLint configuration
+### 3. Lightweight Custom SVG Data Visualizations
+*   **Trend Sparklines (`src/dashboard/components/TrendChart.jsx`)**: Responsive SVG line graphs with custom time-ranges (`1h`, `6h`, `24h`), shaded acceptable safe-zone bands, grid lines, and real-time pulsing cursor points.
+*   **Predictive Analysis Chart (`src/dashboard/components/PredictionChart.jsx`)**: Maps past historical data against forward-looking projections (+30 and +60 minutes) bounded by a custom-shaded statistical confidence funnel showing widening variance in future projections.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 4. Modular Dashboard Components
+*   **`Loader.tsx`**: A cinematic startup loader that simulates device/sensor calibration stages with responsive status texts and animated loading arcs.
+*   **`Navbar.jsx`**: Coordinates global navigation tabs, active connection states, system clocks, and desktop diagnostic status metrics.
+*   **`StatusCard.jsx`**: Visually maps specific metric status thresholds (Safe, Warning, Danger), incorporating radial layout meters, custom parameter SVGs, and threshold ranges.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Technology Stack
+*   **Core Framework**: React 19
+*   **Language**: TypeScript & Modern ES6+ JavaScript
+*   **Build Tool**: Vite 8 & npm
+*   **Styles**: Pure CSS3 (custom custom-properties / variables, no Tailwind CSS or heavy external libraries)
+*   **Charts**: Custom, inline responsive SVG generation (zero bulky graphing library dependencies)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 📂 Project Architecture
+
+```
+o2-sentinel-frontend/
+├── public/                 # Static assets (Favicons, SVG vectors)
+├── src/
+│   ├── dashboard/
+│   │   └── components/
+│   │       ├── Loader.tsx          # Systems-check initialization overlay
+│   │       ├── Navbar.jsx          # Tab router, clock & diagnostic sidebar
+│   │       ├── StatusCard.jsx      # Metrics panels showing O2, Temp, Hum
+│   │       ├── TrendChart.jsx      # Lightweight native SVG line charts
+│   │       └── PredictionChart.jsx # Future confidence interval projection charts
+│   ├── App.tsx             # Main coordinator, telemetry state and rules engine
+│   ├── index.css           # CSS variables, utility tokens, and iOS look & feel
+│   └── main.tsx            # Application entrypoint
+├── index.html              # HTML shell & SEO configuration
+├── vite.config.ts          # Vite bundling directives
+├── tsconfig.json           # Compiler rules
+└── package.json            # Scripts and dependencies
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Setup & Execution
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Installation
+Clone the repository and install the development dependencies:
+```bash
+npm install
+```
+
+### 2. Start Local Dev Server
+Launch Vite's hot-reloading development environment:
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### 3. Build & Compile for Production
+Bundle and optimize assets for deployment:
+```bash
+npm run build
+```
+You can review the build output locally with:
+```bash
+npm run preview
+```
+
+### 4. Lint and Quality Check
+Verify code formatting against compiler and style configs:
+```bash
+npm run lint
 ```
