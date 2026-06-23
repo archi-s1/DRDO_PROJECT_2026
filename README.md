@@ -9,7 +9,7 @@ O₂ Sentinel is a state-of-the-art, premium environmental telemetry dashboard b
 ### 1. Premium iOS-Inspired Design System (`src/index.css`)
 *   **Aesthetics**: Glassmorphism (`backdrop-filter: blur`), dark mode palettes, deep rich backgrounds, and harmonious pastel-saturated accents (`system-blue`, `system-green`, `system-orange`, `system-red`).
 *   **Micro-Animations**: Custom loader animations, smooth state transitions, pulsing status beacons, warning banners, and button interactions.
-*   **Responsive Layout**: Adapts gracefully from mobile viewports to large-screen dashboard panels, transitioning from a top navbar to an advanced desktop layout with a sidebar.
+*   **Responsive Layout**: Adapts gracefully from mobile viewports to large-screen dashboards, transitioning components seamlessly into stacking column layouts.
 
 ### 2. Interactive Telemetry Simulation (`src/App.tsx`)
 *   **Nominal Telemetry Drift**: Naturally drifts and fluctuates telemetry values every 1.5 seconds.
@@ -23,7 +23,7 @@ O₂ Sentinel is a state-of-the-art, premium environmental telemetry dashboard b
 
 ### 4. Modular Dashboard Components
 *   **`Loader.tsx`**: A cinematic startup loader that simulates device/sensor calibration stages with responsive status texts and animated loading arcs.
-*   **`Navbar.jsx`**: Coordinates global navigation tabs, active connection states, system clocks, and desktop diagnostic status metrics.
+*   **Large Oxygen Display**: Features a prominent centered card layout displaying real-time oxygen values, safety limits, and status alarms.
 *   **`StatusCard.jsx`**: Visually maps specific metric status thresholds (Safe, Warning, Danger), incorporating radial layout meters, custom parameter SVGs, and threshold ranges.
 
 ---
@@ -46,7 +46,6 @@ o2-sentinel-frontend/
 │   ├── dashboard/
 │   │   └── components/
 │   │       ├── Loader.tsx          # Systems-check initialization overlay
-│   │       ├── Navbar.jsx          # Tab router, clock & diagnostic sidebar
 │   │       ├── StatusCard.jsx      # Metrics panels showing O2, Temp, Hum
 │   │       ├── TrendChart.jsx      # Lightweight native SVG line charts
 │   │       └── PredictionChart.jsx # Future confidence interval projection charts
