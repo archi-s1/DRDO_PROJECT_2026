@@ -65,6 +65,10 @@ async function initializeDatabase() {
     );
   `);
 
+  // Performance optimization: indexes on status/type and timestamp fields
+  await db.exec("CREATE INDEX IF NOT EXISTS idx_alerts_status_type ON alerts (status, type);");
+  await db.exec("CREATE INDEX IF NOT EXISTS idx_sensor_logs_timestamp ON sensor_logs (timestamp);");
+
   // Insert a startup boot log entry
   try {
     await db.run(
