@@ -1,32 +1,32 @@
 :root {
-  /* DRDO Tactical Cyber Palette */
-  --drdo-cyan: #00f0ff;
-  --drdo-cyan-glow: rgba(0, 240, 255, 0.35);
-  --drdo-green: #00e676;
-  --drdo-green-glow: rgba(0, 230, 118, 0.25);
-  --drdo-red: #ff3d00;
-  --drdo-red-glow: rgba(255, 61, 0, 0.35);
-  --drdo-orange: #ff9100;
-  --drdo-orange-glow: rgba(255, 145, 0, 0.25);
-  --drdo-gray: #78909c;
+  /* iOS Dark Mode Palette */
+  --drdo-cyan: #0A84FF;          /* iOS System Blue */
+  --drdo-cyan-glow: rgba(10, 132, 255, 0.2);
+  --drdo-green: #30D158;         /* iOS System Green */
+  --drdo-green-glow: rgba(48, 209, 88, 0.15);
+  --drdo-red: #FF453A;           /* iOS System Red */
+  --drdo-red-glow: rgba(255, 69, 58, 0.2);
+  --drdo-orange: #FF9F0A;        /* iOS System Orange */
+  --drdo-orange-glow: rgba(255, 159, 10, 0.15);
+  --drdo-gray: #8E8E93;          /* iOS System Gray */
 
-  /* Console Surface Colors */
-  --drdo-bg: #070c15;
-  --drdo-panel: #0d1625;
-  --drdo-panel-hover: #121e33;
-  --drdo-panel-active: #162640;
-  --drdo-border: rgba(0, 240, 255, 0.15);
-  --drdo-border-hover: rgba(0, 240, 255, 0.3);
-  --drdo-separator: rgba(255, 255, 255, 0.08);
+  /* Surface Colors (True iOS Black) */
+  --drdo-bg: #000000;
+  --drdo-panel: #1C1C1E;         /* iOS secondary system background */
+  --drdo-panel-hover: #2C2C2E;   /* iOS tertiary system background */
+  --drdo-panel-active: #3A3A3C;
+  --drdo-border: rgba(255, 255, 255, 0.1);
+  --drdo-border-hover: rgba(255, 255, 255, 0.2);
+  --drdo-separator: rgba(255, 255, 255, 0.1);
   
   --drdo-text-primary: #ffffff;
-  --drdo-text-secondary: #90a4ae;
-  --drdo-text-tertiary: #546e7a;
-  --drdo-grid-line: rgba(0, 240, 255, 0.04);
+  --drdo-text-secondary: #8E8E93; /* iOS Gray */
+  --drdo-text-tertiary: #48484A;  /* iOS Gray 4 */
+  --drdo-grid-line: rgba(255, 255, 255, 0.02);
 
-  /* Typography */
-  --font-tactical: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-digital: 'Orbitron', monospace;
+  /* Typography (iOS System Fonts) */
+  --font-tactical: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Compact Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-digital: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Compact Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   font-family: var(--font-tactical);
   color-scheme: dark;
@@ -47,16 +47,12 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--drdo-bg);
+  background-color: #000000;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Military telemetry HUD lines background */
-  background-image: 
-    linear-gradient(var(--drdo-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--drdo-grid-line) 1px, transparent 1px),
-    radial-gradient(at 50% 0%, rgba(0, 240, 255, 0.07) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(0, 230, 118, 0.03) 0px, transparent 40%);
-  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+  /* Sleek iOS vertical radial dark glow */
+  background-image: radial-gradient(circle at 50% 0%, rgba(10, 132, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+  background-size: 100% 100%;
   background-attachment: fixed;
 }
 
@@ -66,14 +62,14 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 12, 24, 0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.4);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 #root {
@@ -92,41 +88,32 @@ body {
   width: 100%;
 }
 
-/* Tactical Panel */
+/* Tactical Panel as iOS Card */
 .ios-blur-card {
-  background: var(--drdo-panel);
-  border-radius: 6px;
+  background: rgba(28, 28, 30, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
   padding: 1.25rem;
   border: 1px solid var(--drdo-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.03);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.ios-blur-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--drdo-cyan), transparent);
-  opacity: 0.2;
-}
-
 .ios-blur-card:hover {
   transform: translateY(-2px);
-  border-color: var(--drdo-cyan);
-  box-shadow: 0 8px 24px rgba(0, 240, 255, 0.15), inset 0 0 15px rgba(0, 240, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
 }
 
 /* Custom switch for Tactical Simulator */
 .ios-switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 24px;
+  width: 51px;
+  height: 31px;
 }
 
 .ios-switch input {
@@ -142,41 +129,41 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--drdo-text-tertiary);
-  transition: .2s;
-  border-radius: 4px;
+  background-color: rgba(120, 120, 128, 0.32);
+  transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: 16px;
+  border: none;
 }
 
 .ios-slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
-  background-color: var(--drdo-text-secondary);
-  transition: .2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  border-radius: 2px;
+  height: 27px;
+  width: 27px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #ffffff;
+  transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06);
 }
 
 input:checked + .ios-slider {
-  background-color: rgba(255, 61, 0, 0.15);
-  border-color: var(--drdo-red);
+  background-color: #30D158; /* systemGreen */
 }
 
 input:checked + .ios-slider:before {
-  transform: translateX(26px);
-  background-color: var(--drdo-red);
-  box-shadow: 0 0 8px var(--drdo-red);
+  transform: translateX(20px);
+  background-color: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Tactical Segmented Control */
 .ios-segmented-control {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--drdo-separator);
+  background: rgba(116, 116, 128, 0.18);
+  border: none;
   padding: 2px;
-  border-radius: 4px;
+  border-radius: 8px;
   display: inline-flex;
   gap: 2px;
 }
@@ -184,20 +171,25 @@ input:checked + .ios-slider:before {
 .ios-segmented-item {
   border: none;
   background: transparent;
-  color: var(--drdo-text-secondary);
-  padding: 4px 10px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   font-family: var(--font-tactical);
 }
 
+.ios-segmented-item:hover {
+  color: #ffffff;
+}
+
 .ios-segmented-item.active {
-  background: var(--drdo-cyan);
-  color: #070c15;
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 /* System Beacon */
@@ -300,10 +292,12 @@ input:checked + .ios-slider:before {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1.5rem;
-  background: linear-gradient(135deg, #0d1625, #080d16);
-  border-radius: 8px;
+  background: rgba(28, 28, 30, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
   border: 1px solid var(--drdo-border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 240, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -316,14 +310,14 @@ input:checked + .ios-slider:before {
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, #00f0ff, #00e676, #00f0ff);
+  height: 3px;
+  background: linear-gradient(90deg, var(--drdo-cyan), var(--drdo-green), var(--drdo-cyan));
 }
 
 .large-oxygen-card:hover {
   transform: translateY(-2px);
-  border-color: var(--drdo-cyan);
-  box-shadow: 0 15px 35px rgba(0, 240, 255, 0.15), inset 0 0 35px rgba(0, 240, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
 }
 
 .large-oxygen-value {
@@ -334,18 +328,16 @@ input:checked + .ios-slider:before {
   letter-spacing: -0.01em;
   margin: 16px 0;
   color: var(--drdo-cyan);
-  text-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
   transition: all 0.3s ease;
 }
 
 .large-oxygen-value.status-danger {
   color: var(--drdo-red);
-  text-shadow: 0 0 35px rgba(255, 61, 0, 0.55);
 }
 
 .status-badge-pill {
   padding: 4px 14px;
-  border-radius: 4px;
+  border-radius: 9999px;
   font-weight: 700;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -435,7 +427,7 @@ input:checked + .ios-slider:before {
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background-color: var(--drdo-bg);
+  background-color: #000000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -444,10 +436,6 @@ input:checked + .ios-slider:before {
   opacity: 1;
   visibility: visible;
   transition: opacity 0.4s ease, visibility 0.4s ease;
-  background-image: 
-    linear-gradient(var(--drdo-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--drdo-grid-line) 1px, transparent 1px);
-  background-size: 40px 40px, 40px 40px;
 }
 
 .loader-overlay.fade-out {
@@ -463,11 +451,13 @@ input:checked + .ios-slider:before {
   text-align: center;
   width: 90%;
   max-width: 360px;
-  background: var(--drdo-panel);
-  border: 1px solid var(--drdo-cyan);
-  box-shadow: 0 10px 40px rgba(0, 240, 255, 0.15);
+  background: rgba(28, 28, 30, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--drdo-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   padding: 2.5rem 2rem;
-  border-radius: 4px;
+  border-radius: 16px;
 }
 
 .loader-logo-wrapper {
@@ -481,7 +471,7 @@ input:checked + .ios-slider:before {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 3px solid rgba(0, 240, 255, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.1);
   border-top-color: var(--drdo-cyan);
   animation: spin 1s linear infinite;
 }
@@ -516,8 +506,8 @@ input:checked + .ios-slider:before {
 .loader-progress-track {
   width: 100%;
   height: 4px;
-  background-color: var(--drdo-separator);
-  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
   overflow: hidden;
   margin-bottom: 12px;
 }
@@ -525,8 +515,8 @@ input:checked + .ios-slider:before {
 .loader-progress-bar {
   height: 100%;
   background-color: var(--drdo-cyan);
-  box-shadow: 0 0 8px var(--drdo-cyan);
   width: 0%;
+  border-radius: 9999px;
 }
 
 .loader-status-text {
@@ -551,23 +541,15 @@ input:checked + .ios-slider:before {
 .tactical-hud-header {
   border-bottom: 1px solid var(--drdo-border);
   padding: 16px 20px;
-  background: #090e19;
+  background: rgba(28, 28, 30, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.tactical-hud-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--drdo-cyan), transparent);
-  opacity: 0.4;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .drdo-badge {
@@ -578,5 +560,6 @@ input:checked + .ios-slider:before {
   color: var(--drdo-cyan);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(0, 240, 255, 0.04);
+  background: rgba(10, 132, 255, 0.08);
+  border-radius: 6px;
 }

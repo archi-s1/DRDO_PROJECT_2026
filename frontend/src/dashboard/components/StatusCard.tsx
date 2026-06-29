@@ -33,12 +33,12 @@ export default function StatusCard({
 
   const isSafetyCard = title === 'Overall Safety';
   
-  // Custom glowing properties
+  // Custom shadow properties for iOS
   const glowShadow = status === 'normal'
-    ? '0 4px 20px rgba(0, 240, 255, 0.15), inset 0 0 12px rgba(0, 240, 255, 0.03)'
+    ? '0 4px 20px rgba(0, 0, 0, 0.4)'
     : status === 'warning'
-      ? '0 4px 20px rgba(255, 145, 0, 0.15), inset 0 0 12px rgba(255, 145, 0, 0.03)'
-      : '0 4px 20px rgba(255, 61, 0, 0.2), inset 0 0 12px rgba(255, 61, 0, 0.05)';
+      ? '0 4px 20px rgba(255, 159, 10, 0.1)'
+      : '0 4px 20px rgba(255, 69, 58, 0.15)';
 
   const accentColor = getStatusColor();
 
@@ -68,8 +68,7 @@ export default function StatusCard({
           color: accentColor,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          filter: `drop-shadow(0 0 4px ${accentColor}40)`
+          justifyContent: 'center'
         }}>
           {icon}
         </div>
@@ -84,8 +83,7 @@ export default function StatusCard({
             letterSpacing: '-0.02em', 
             color: 'var(--drdo-text-primary)',
             fontFamily: 'var(--font-digital)',
-            lineHeight: '1',
-            textShadow: `0 0 15px ${accentColor}25`
+            lineHeight: '1'
           }}>
             {value}
           </span>
@@ -118,16 +116,15 @@ export default function StatusCard({
             <div style={{ 
               height: '4px', 
               width: '100%', 
-              background: 'rgba(255, 255, 255, 0.05)', 
-              borderRadius: '2px',
+              background: 'rgba(255, 255, 255, 0.08)', 
+              borderRadius: '9999px',
               overflow: 'hidden'
             }}>
               <div style={{ 
                 height: '100%', 
                 width: `${Math.min(100, Math.max(0, progress))}%`, 
                 background: accentColor,
-                boxShadow: `0 0 8px ${accentColor}`,
-                borderRadius: '2px',
+                borderRadius: '9999px',
                 transition: 'width 0.5s ease-in-out'
               }} />
             </div>

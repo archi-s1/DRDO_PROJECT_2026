@@ -292,19 +292,9 @@ export default function App() {
       {/* DRDO Top Tactical HUD Bar */}
       <div className="tactical-hud-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Custom SVG logo representing a military shield/wings logo */}
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--drdo-cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 5px var(--drdo-cyan-glow))' }}>
-            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5" />
-            <line x1="12" y1="2" x2="12" y2="22" />
-            <polyline points="12 12.5 17 9 17 15" />
-            <polyline points="12 12.5 7 9 7 15" />
-          </svg>
           <div>
-            <div style={{ fontSize: '0.6rem', color: 'var(--drdo-text-secondary)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              Ministry of Defence • Govt. of India
-            </div>
-            <h1 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '2px 0 0 0', letterSpacing: '0.04em', color: 'var(--drdo-text-primary)' }}>
-              DEFENCE BIOENGINEERING AND ELECTROMEDICAL LABORATORY (DEBEL)
+            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, letterSpacing: '0.08em', color: 'var(--drdo-cyan)', textShadow: '0 0 8px var(--drdo-cyan-glow)' }}>
+              O₂ SENTINEL
             </h1>
           </div>
         </div>
@@ -322,21 +312,27 @@ export default function App() {
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
-            background: 'rgba(0, 240, 255, 0.05)', 
+            background: 'rgba(255, 255, 255, 0.04)', 
             padding: '5px 12px', 
             border: '1px solid var(--drdo-border)',
-            borderRadius: '2px'
+            borderRadius: '6px'
           }}>
             <span 
               className="beacon-dot beacon-pulse" 
               style={{ 
-                '--status-color': deviceStatus?.status === 'Online' ? 'var(--drdo-cyan)' : 'var(--drdo-red)', 
+                '--status-color': deviceStatus?.status === 'Online' ? 'var(--drdo-green)' : 'var(--drdo-red)', 
                 width: '6px', 
                 height: '6px' 
               } as React.CSSProperties} 
             />
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: deviceStatus?.status === 'Online' ? 'var(--drdo-cyan)' : 'var(--drdo-red)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              SYS: {deviceStatus?.status || 'OFFLINE'} | BAT: {deviceStatus?.battery || '--'}
+            <span style={{ 
+              fontSize: '0.65rem', 
+              fontWeight: 700, 
+              color: deviceStatus?.status === 'Online' ? 'var(--drdo-green)' : 'var(--drdo-red)', 
+              letterSpacing: '0.08em', 
+              textTransform: 'uppercase' 
+            }}>
+              {deviceStatus?.status === 'Online' ? 'ONLINE' : 'OFFLINE'}
             </span>
           </div>
 
@@ -344,10 +340,10 @@ export default function App() {
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
-            background: 'rgba(0, 240, 255, 0.05)', 
+            background: 'rgba(255, 255, 255, 0.04)', 
             padding: '5px 12px', 
             border: '1px solid var(--drdo-border)',
-            borderRadius: '2px'
+            borderRadius: '6px'
           }}>
             <span 
               className="beacon-dot beacon-pulse" 
@@ -357,7 +353,7 @@ export default function App() {
                 height: '6px' 
               } as React.CSSProperties} 
             />
-            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: health?.status === 'HEALTHY' ? 'var(--drdo-cyan)' : 'var(--drdo-red)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: health?.status === 'HEALTHY' ? 'var(--drdo-green)' : 'var(--drdo-red)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               SRV: {health ? `${health.status} (${(health.database.size / 1024).toFixed(0)}KB)` : 'OFFLINE'} | MEM: {health ? `${(health.memory.heapUsed / 1024 / 1024).toFixed(1)}MB` : '--MB'} | WRK: {health?.worker.active ? 'ACTIVE' : 'INACTIVE'}
             </span>
           </div>
