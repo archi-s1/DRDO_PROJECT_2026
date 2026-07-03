@@ -38,6 +38,59 @@ function Sparkline({ data, color, min, max }: { data: number[]; color: string; m
   );
 }
 
+function getPercent(val: number, min: number, max: number) {
+  const pct = ((val - min) / (max - min)) * 100;
+  return Math.min(100, Math.max(0, pct));
+}
+
+interface Alert {
+  id: number;
+  message: string;
+  severity: string;
+  timestamp: string;
+  acknowledged?: number | boolean;
+}
+
+interface Recommendation {
+  text: string;
+  priority: string;
+}
+
+interface StatDetails {
+  min: number;
+  avg: number;
+  max: number;
+}
+
+interface SystemStats {
+  telemetry: {
+    oxygen: StatDetails;
+    temperature: StatDetails;
+    humidity: StatDetails;
+  };
+  alerts: {
+    total: number;
+    active: number;
+    resolved: number;
+    acknowledged: number;
+  };
+}
+
+interface SystemHealth {
+  status: string;
+  memory: {
+    heapUsed: number;
+  };
+  worker?: {
+    active: boolean;
+  };
+}
+
+interface SystemEvent {
+  timestamp: string;
+  event: string;
+}
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [systemTime, setSystemTime] = useState<Date>(new Date());
@@ -58,7 +111,7 @@ export default function App() {
   const [deviceStatus, setDeviceStatus] = useState<{ status: string; battery: string; lastUpdated: string } | null>(null);
 
   // Status variables for Firebase
-  const [firebaseConnected, setFirebaseConnected] = useState(true);
+  const [firebaseStatus, setFirebaseStatus] = useState<'CONNECTED' | 'WAITING_FOR_DATA' | 'DISCONNECTED'>('CONNECTED');
   const [lastSyncTime, setLastSyncTime] = useState<string>(new Date().toLocaleTimeString());
 
   // Buffer state variables (Telemetry graphs)
@@ -78,12 +131,12 @@ export default function App() {
     Array.from({ length: 15 }, () => 20.7 + (Math.random() - 0.5) * 0.1)
   );
 
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const [alertsHistory, setAlertsHistory] = useState<any[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [stats, setStats] = useState<any | null>(null);
-  const [health, setHealth] = useState<any | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertsHistory, setAlertsHistory] = useState<Alert[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [events, setEvents] = useState<SystemEvent[]>([]);
 
   // Load telemetry buffers
   useEffect(() => {
@@ -92,9 +145,9 @@ export default function App() {
       try {
         const historyData = await getSensorHistory();
         if (active && Array.isArray(historyData) && historyData.length > 0) {
-          const o2Vals = historyData.map((row: any) => row.oxygen ?? 20.8);
-          const tempVals = historyData.map((row: any) => row.temperature ?? 24.5);
-          const humVals = historyData.map((row: any) => row.humidity ?? 48.2);
+          const o2Vals = historyData.map((row: { oxygen?: number }) => row.oxygen ?? 20.8);
+          const tempVals = historyData.map((row: { temperature?: number }) => row.temperature ?? 24.5);
+          const humVals = historyData.map((row: { humidity?: number }) => row.humidity ?? 48.2);
 
           const padArray = (arr: number[], fallbackVal: number) => {
             const padSize = 15 - arr.length;
@@ -108,7 +161,7 @@ export default function App() {
           setOxygenHistory(padArray(o2Vals, 20.8));
           setTempHistory(padArray(tempVals, 24.5));
           setHumidityHistory(padArray(humVals, 48.2));
-          setFirebaseConnected(true);
+          setFirebaseStatus('CONNECTED');
           setLastSyncTime(new Date().toLocaleTimeString());
         }
       } catch (err) {
@@ -130,20 +183,43 @@ export default function App() {
         try {
           const sensorData = await getSensorData();
           if (active) {
-            setOxygen(sensorData.oxygen ?? 20.8);
-            setTemperature(sensorData.temperature ?? 24.5);
-            setHumidity(sensorData.humidity ?? 48.2);
-            setSystemTime(new Date(sensorData.timestamp));
-            setFirebaseConnected(true);
-            setLastSyncTime(new Date().toLocaleTimeString());
+            if (sensorData && sensorData.exists === false) {
+              setFirebaseStatus('WAITING_FOR_DATA');
+            } else {
+              const o2Val = sensorData.oxygen ?? 20.8;
+              const tempVal = sensorData.temperature ?? 24.5;
+              const humVal = sensorData.humidity ?? 48.2;
+              setOxygen(o2Val);
+              setTemperature(tempVal);
+              setHumidity(humVal);
+              setOxygenHistory(prev => [...prev.slice(1), o2Val]);
+              setTempHistory(prev => [...prev.slice(1), tempVal]);
+              setHumidityHistory(prev => [...prev.slice(1), humVal]);
+              setSystemTime(new Date(sensorData.timestamp));
+              setFirebaseStatus('CONNECTED');
+              setLastSyncTime(new Date().toLocaleTimeString());
+            }
           }
         } catch (err) {
+          console.warn("Telemetry poll failed:", err);
           if (active) {
-            setOxygen(prev => Math.min(21.1, Math.max(20.5, prev + (Math.random() - 0.5) * 0.04)));
-            setTemperature(prev => Math.min(26.0, Math.max(23.0, prev + (Math.random() - 0.5) * 0.1)));
-            setHumidity(prev => Math.min(52.0, Math.max(45.0, prev + (Math.random() - 0.5) * 0.2)));
+            setOxygen(prev => {
+              const val = Math.min(21.1, Math.max(20.5, prev + (Math.random() - 0.5) * 0.04));
+              setTimeout(() => setOxygenHistory(h => [...h.slice(1), val]), 0);
+              return val;
+            });
+            setTemperature(prev => {
+              const val = Math.min(26.0, Math.max(23.0, prev + (Math.random() - 0.5) * 0.1));
+              setTimeout(() => setTempHistory(h => [...h.slice(1), val]), 0);
+              return val;
+            });
+            setHumidity(prev => {
+              const val = Math.min(52.0, Math.max(45.0, prev + (Math.random() - 0.5) * 0.2));
+              setTimeout(() => setHumidityHistory(h => [...h.slice(1), val]), 0);
+              return val;
+            });
             setSystemTime(new Date());
-            setFirebaseConnected(false);
+            setFirebaseStatus('DISCONNECTED');
           }
         }
       }
@@ -154,6 +230,7 @@ export default function App() {
           setDeviceStatus(deviceData);
         }
       } catch (err) {
+        console.warn("Devices poll failed:", err);
         if (active) {
           setDeviceStatus({ status: "Offline", battery: "0%", lastUpdated: new Date().toISOString() });
         }
@@ -164,21 +241,27 @@ export default function App() {
         if (active) {
           setAlerts(activeAlerts);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Active alerts poll failed:", err);
+      }
 
       try {
         const historyAlerts = await getAlertHistory();
         if (active) {
           setAlertsHistory(historyAlerts);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("History alerts poll failed:", err);
+      }
 
       try {
         const recsData = await getRecommendations();
         if (active && recsData && recsData.success) {
           setRecommendations(recsData.recommendations || []);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Recommendations poll failed:", err);
+      }
 
       try {
         const predData = await getSensorPredictions();
@@ -187,28 +270,36 @@ export default function App() {
           setPredO2_10m(predData.pred10 ?? predData.pred1h ?? (oxygen - 0.05));
           setO2Projection(predData.projection || []);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Predictions poll failed:", err);
+      }
 
       try {
         const statsData = await getSystemStats();
         if (active && statsData && statsData.success && statsData.stats && statsData.stats.telemetry) {
           setStats(statsData.stats);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Stats poll failed:", err);
+      }
 
       try {
         const healthData = await getSystemHealth();
         if (active && healthData && healthData.status && healthData.memory) {
           setHealth(healthData);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Health poll failed:", err);
+      }
 
       try {
         const eventsData = await getSystemEvents();
         if (active && eventsData) {
           setEvents(eventsData);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("Events poll failed:", err);
+      }
     };
 
     fetchData();
@@ -218,28 +309,33 @@ export default function App() {
       active = false;
       clearInterval(pollInterval);
     };
-  }, [mockAnomaly]);
+  }, [mockAnomaly, oxygen]);
 
   // Simulated Anomaly Drift
   useEffect(() => {
     if (!mockAnomaly) return;
 
     const simulationInterval = setInterval(() => {
-      setOxygen(prev => Math.max(18.5, prev - 0.08));
-      setTemperature(prev => Math.min(34.5, prev + 0.3));
-      setHumidity(prev => Math.min(62.0, prev + 0.5));
+      setOxygen(prev => {
+        const val = Math.max(18.5, prev - 0.08);
+        setTimeout(() => setOxygenHistory(h => [...h.slice(1), val]), 0);
+        return val;
+      });
+      setTemperature(prev => {
+        const val = Math.min(34.5, prev + 0.3);
+        setTimeout(() => setTempHistory(h => [...h.slice(1), val]), 0);
+        return val;
+      });
+      setHumidity(prev => {
+        const val = Math.min(62.0, prev + 0.5);
+        setTimeout(() => setHumidityHistory(h => [...h.slice(1), val]), 0);
+        return val;
+      });
       setSystemTime(new Date());
     }, 1000);
 
     return () => clearInterval(simulationInterval);
   }, [mockAnomaly]);
-
-  // Roll history buffers
-  useEffect(() => {
-    setOxygenHistory(prev => [...prev.slice(1), oxygen]);
-    setTempHistory(prev => [...prev.slice(1), temperature]);
-    setHumidityHistory(prev => [...prev.slice(1), humidity]);
-  }, [oxygen, temperature, humidity]);
 
   const handleAcknowledgeAlert = async (id: number) => {
     try {
@@ -250,6 +346,13 @@ export default function App() {
       console.error("Failed to acknowledge alert:", err);
     }
   };
+
+  const mockEventTimes = useMemo(() => {
+    return {
+      t5s: new Date(systemTime.getTime() - 5000).toLocaleTimeString(),
+      t10s: new Date(systemTime.getTime() - 10000).toLocaleTimeString()
+    };
+  }, [systemTime]);
 
   // Status thresholds check
   const o2Status = useMemo(() => {
@@ -270,10 +373,19 @@ export default function App() {
   }, [humidity]);
 
   const overallSafety = useMemo(() => {
+    // 1. Critical safety breach takes highest precedence
     if (o2Status === 'critical' || tempStatus === 'critical' || humStatus === 'critical') return 'critical';
+
+    // 2. Offline connections report as warning (amber degraded state)
+    if (firebaseStatus !== 'CONNECTED' || !deviceStatus || deviceStatus.status !== 'Online') {
+      return 'warning';
+    }
+
+    // 3. Warning limits breach
     if (tempStatus === 'warning' || humStatus === 'warning') return 'warning';
+
     return 'normal';
-  }, [o2Status, tempStatus, humStatus]);
+  }, [o2Status, tempStatus, humStatus, firebaseStatus, deviceStatus]);
 
   // Summary Metrics calculations
   const avgOxygen = useMemo(() => {
@@ -300,17 +412,45 @@ export default function App() {
     return humidityHistory;
   }, [activeTrendTab, oxygenHistory, tempHistory, humidityHistory]);
 
-  const trendRange = useMemo(() => {
-    if (activeTrendTab === 'oxygen') return { min: 18, max: 25, unit: '%', color: '#0A84FF', label: 'Oxygen' };
-    if (activeTrendTab === 'temperature') return { min: 15, max: 40, unit: '°C', color: '#FFD60A', label: 'Temperature' };
-    return { min: 20, max: 80, unit: '%', color: '#00f0ff', label: 'Humidity' };
-  }, [activeTrendTab]);
-
   const timeFilteredData = useMemo(() => {
     if (timeFilter === '1h') return selectedTrendData.slice(-5);
     if (timeFilter === '6h') return selectedTrendData.slice(-10);
     return selectedTrendData;
   }, [selectedTrendData, timeFilter]);
+
+  const trendRange = useMemo(() => {
+    let dataMin = Math.min(...timeFilteredData);
+    let dataMax = Math.max(...timeFilteredData);
+    if (activeTrendTab === 'oxygen' && dataMax - dataMin < 0.5) {
+      const mid = (dataMax + dataMin) / 2;
+      dataMin = mid - 0.25;
+      dataMax = mid + 0.25;
+    } else if (activeTrendTab === 'temperature' && dataMax - dataMin < 1.0) {
+      const mid = (dataMax + dataMin) / 2;
+      dataMin = mid - 0.5;
+      dataMax = mid + 0.5;
+    } else if (activeTrendTab === 'humidity' && dataMax - dataMin < 2.0) {
+      const mid = (dataMax + dataMin) / 2;
+      dataMin = mid - 1.0;
+      dataMax = mid + 1.0;
+    }
+    
+    const dataRange = dataMax - dataMin;
+    
+    if (activeTrendTab === 'oxygen') {
+      const min = Math.max(15, Number((dataMin - dataRange * 0.1).toFixed(1)));
+      const max = Math.min(25, Number((dataMax + dataRange * 0.1).toFixed(1)));
+      return { min, max, unit: '%', color: '#0A84FF', label: 'Oxygen' };
+    }
+    if (activeTrendTab === 'temperature') {
+      const min = Math.max(0, Number((dataMin - dataRange * 0.1).toFixed(1)));
+      const max = Math.min(50, Number((dataMax + dataRange * 0.1).toFixed(1)));
+      return { min, max, unit: '°C', color: '#FFD60A', label: 'Temperature' };
+    }
+    const min = Math.max(0, Number((dataMin - dataRange * 0.1).toFixed(1)));
+    const max = Math.min(100, Number((dataMax + dataRange * 0.1).toFixed(1)));
+    return { min, max, unit: '%', color: '#00f0ff', label: 'Humidity' };
+  }, [activeTrendTab, timeFilteredData]);
 
   // SVG Trend Chart Coordinates
   const trendSvgCoords = useMemo(() => {
@@ -348,12 +488,24 @@ export default function App() {
     const w = 300;
     const h = 180;
     const padding = { left: 35, right: 15, top: 15, bottom: 25 };
-    const minVal = 18;
-    const maxVal = 25;
-    const range = maxVal - minVal;
 
     const histSlice = oxygenHistory.slice(-5);
-    const totalSteps = histSlice.length + o2Projection.slice(0, 6).length;
+    const projSlice = o2Projection.slice(0, 6);
+    const totalSteps = histSlice.length + projSlice.length;
+
+    // Calculate dynamic axis range
+    const allVals = [...histSlice, ...projSlice];
+    let dataMin = Math.min(...allVals);
+    let dataMax = Math.max(...allVals);
+    if (dataMax - dataMin < 0.5) {
+      const mid = (dataMax + dataMin) / 2;
+      dataMin = mid - 0.25;
+      dataMax = mid + 0.25;
+    }
+    const dataRange = dataMax - dataMin;
+    const minVal = Math.max(15, Number((dataMin - dataRange * 0.1).toFixed(2)));
+    const maxVal = Math.min(25, Number((dataMax + dataRange * 0.1).toFixed(2)));
+    const range = maxVal - minVal;
 
     const histPoints = histSlice.map((val, idx) => {
       const x = padding.left + (idx / (totalSteps - 1)) * (w - padding.left - padding.right);
@@ -362,7 +514,7 @@ export default function App() {
       return { x, y };
     });
 
-    const predPoints = o2Projection.slice(0, 6).map((val, idx) => {
+    const predPoints = projSlice.map((val, idx) => {
       const x = padding.left + ((idx + histSlice.length) / (totalSteps - 1)) * (w - padding.left - padding.right);
       const clamped = Math.max(minVal, Math.min(maxVal, val));
       const y = h - padding.bottom - ((clamped - minVal) / range) * (h - padding.top - padding.bottom);
@@ -400,7 +552,17 @@ export default function App() {
       return { y, val };
     });
 
-    return { histPath, predPath, confidenceBand, gridLines, dividerX: histPoints[histPoints.length - 1]?.x || 0 };
+    const latestHistPoint = histPoints[histPoints.length - 1];
+
+    return {
+      histPath,
+      predPath,
+      confidenceBand,
+      gridLines,
+      dividerX: latestHistPoint?.x || 0,
+      dividerY: latestHistPoint?.y || 0,
+      latestValue: histSlice[histSlice.length - 1]
+    };
   }, [oxygenHistory, o2Projection]);
 
   // Modular components definition
@@ -422,13 +584,33 @@ export default function App() {
           <span className="kpi-unit">%</span>
         </div>
       </div>
-      <div className="kpi-footer">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <div className="kpi-range">Range: 19.5% – 23.5%</div>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+      <div className="kpi-footer" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>
+            <span>Min: 19.5%</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Safe Range</span>
+            <span>Max: 23.5%</span>
+          </div>
+          <div style={{ height: '4px', width: '100%', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', position: 'relative' }}>
+            <div style={{
+              position: 'absolute',
+              left: `${getPercent(oxygen, 19.5, 23.5)}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: o2Status === 'normal' ? 'var(--color-success)' : o2Status === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)',
+              boxShadow: `0 0 6px ${o2Status === 'normal' ? 'var(--color-success)' : o2Status === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)'}`,
+              transition: 'left 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            }} />
+          </div>
         </div>
-        <div className="sparkline-container">
-          <Sparkline data={oxygenHistory} color="#0A84FF" min={18} max={25} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+          <div className="sparkline-container">
+            <Sparkline data={oxygenHistory} color="#0A84FF" min={18} max={25} />
+          </div>
         </div>
       </div>
     </div>
@@ -451,13 +633,33 @@ export default function App() {
           <span className="kpi-unit">%</span>
         </div>
       </div>
-      <div className="kpi-footer">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <div className="kpi-range">Ideal: 40% – 60%</div>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+      <div className="kpi-footer" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>
+            <span>Min: 40%</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Ideal Range</span>
+            <span>Max: 60%</span>
+          </div>
+          <div style={{ height: '4px', width: '100%', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', position: 'relative' }}>
+            <div style={{
+              position: 'absolute',
+              left: `${getPercent(humidity, 40, 60)}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: humStatus === 'normal' ? 'var(--color-success)' : humStatus === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)',
+              boxShadow: `0 0 6px ${humStatus === 'normal' ? 'var(--color-success)' : humStatus === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)'}`,
+              transition: 'left 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            }} />
+          </div>
         </div>
-        <div className="sparkline-container">
-          <Sparkline data={humidityHistory} color="#00f0ff" min={20} max={80} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+          <div className="sparkline-container">
+            <Sparkline data={humidityHistory} color="#00f0ff" min={20} max={80} />
+          </div>
         </div>
       </div>
     </div>
@@ -480,13 +682,33 @@ export default function App() {
           <span className="kpi-unit">°C</span>
         </div>
       </div>
-      <div className="kpi-footer">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <div className="kpi-range">Ideal: 20°C – 30°C</div>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+      <div className="kpi-footer" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '4px' }}>
+            <span>Min: 20°C</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Ideal Range</span>
+            <span>Max: 30°C</span>
+          </div>
+          <div style={{ height: '4px', width: '100%', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', position: 'relative' }}>
+            <div style={{
+              position: 'absolute',
+              left: `${getPercent(temperature, 20, 30)}%`,
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: tempStatus === 'normal' ? 'var(--color-success)' : tempStatus === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)',
+              boxShadow: `0 0 6px ${tempStatus === 'normal' ? 'var(--color-success)' : tempStatus === 'warning' ? 'var(--color-warning)' : 'var(--color-critical)'}`,
+              transition: 'left 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            }} />
+          </div>
         </div>
-        <div className="sparkline-container">
-          <Sparkline data={tempHistory} color="#FFD60A" min={15} max={40} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>Interval: 5s | Live</div>
+          <div className="sparkline-container">
+            <Sparkline data={tempHistory} color="#FFD60A" min={15} max={40} />
+          </div>
         </div>
       </div>
     </div>
@@ -547,7 +769,7 @@ export default function App() {
           ))}
           {trendSvgCoords.gridLines.map((line, idx) => (
             <text key={idx} x="32" y={line.y + 4} fill="var(--text-secondary)" fontSize="8.5" textAnchor="end" fontFamily="var(--font-mono)">
-              {line.val.toFixed(idx === 0 || idx === 4 ? 0 : 1)}
+              {line.val.toFixed(1)}
             </text>
           ))}
 
@@ -577,8 +799,11 @@ export default function App() {
                 />
                 {isLatest && (
                   <g>
-                    <rect x={pt.x - 42} y={pt.y - 28} width="58" height="18" rx="4" fill="rgba(0,0,0,0.85)" stroke="var(--border-subtle)" strokeWidth="1" />
-                    <text x={pt.x - 13} y={pt.y - 16} fill="#fff" fontSize="9" fontWeight="700" textAnchor="middle" fontFamily="var(--font-mono)">
+                    {/* Pointer line connecting tooltip to point */}
+                    <line x1={pt.x} y1={pt.y} x2={pt.x} y2={pt.y - 12} stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                    {/* Tooltip box centered over point */}
+                    <rect x={pt.x - 30} y={pt.y - 30} width="60" height="18" rx="4" fill="rgba(0,0,0,0.85)" stroke="var(--border-subtle)" strokeWidth="1" />
+                    <text x={pt.x} y={pt.y - 18} fill="#fff" fontSize="9" fontWeight="700" textAnchor="middle" fontFamily="var(--font-mono)">
                       {pt.value.toFixed(2)}{trendRange.unit}
                     </text>
                   </g>
@@ -611,11 +836,11 @@ export default function App() {
 
           {/* Grid Lines */}
           {forecastSvgCoords.gridLines.map((line, idx) => (
-            <line key={idx} x1="35" y1={line.y} x2="285" y2={line.y} stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            <line key={idx} x1="35" y1={line.y} x2="285" y2={line.y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
           ))}
           {forecastSvgCoords.gridLines.map((line, idx) => (
             <text key={idx} x="28" y={line.y + 3} fill="var(--text-secondary)" fontSize="8" textAnchor="end" fontFamily="var(--font-mono)">
-              {line.val}%
+              {line.val.toFixed(1)}%
             </text>
           ))}
 
@@ -632,6 +857,23 @@ export default function App() {
           {/* Forecast projection line */}
           {forecastSvgCoords.predPath && (
             <path d={forecastSvgCoords.predPath} fill="none" stroke="#0A84FF" strokeWidth="2.5" strokeDasharray="3,3" strokeLinecap="round" />
+          )}
+
+          {/* Highlighted current dot and dynamic tooltip */}
+          {forecastSvgCoords.dividerX > 0 && (
+            <g>
+              {/* Pointer line connecting tooltip to current dot */}
+              <line x1={forecastSvgCoords.dividerX} y1={forecastSvgCoords.dividerY} x2={forecastSvgCoords.dividerX} y2={forecastSvgCoords.dividerY - 14} stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+              {/* Tooltip box centered over current dot */}
+              <rect x={forecastSvgCoords.dividerX - 30} y={forecastSvgCoords.dividerY - 32} width="60" height="18" rx="4" fill="rgba(0,0,0,0.85)" stroke="var(--border-subtle)" strokeWidth="1" />
+              <text x={forecastSvgCoords.dividerX} y={forecastSvgCoords.dividerY - 20} fill="#fff" fontSize="9.5" fontWeight="700" textAnchor="middle" fontFamily="var(--font-mono)">
+                {forecastSvgCoords.latestValue.toFixed(2)}%
+              </text>
+
+              {/* Highlighted current dot */}
+              <circle cx={forecastSvgCoords.dividerX} cy={forecastSvgCoords.dividerY} r="5" fill="#fff" stroke="#0A84FF" strokeWidth="2" />
+              <circle cx={forecastSvgCoords.dividerX} cy={forecastSvgCoords.dividerY} r="2.5" fill="#0A84FF" />
+            </g>
           )}
 
           {/* Current Time Divider */}
@@ -705,12 +947,12 @@ export default function App() {
                 <span style={{ color: 'var(--color-success)' }}>SUCCESS</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>[{new Date(Date.now() - 5000).toLocaleTimeString()}]</span>
+                <span style={{ color: 'var(--text-tertiary)' }}>[{mockEventTimes.t5s}]</span>
                 <span style={{ fontWeight: 600 }}>Telemetry Update</span>
                 <span style={{ color: 'var(--color-success)' }}>ONLINE</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>[{new Date(Date.now() - 10000).toLocaleTimeString()}]</span>
+                <span style={{ color: 'var(--text-tertiary)' }}>[{mockEventTimes.t10s}]</span>
                 <span style={{ fontWeight: 600 }}>Forecast Generated</span>
                 <span style={{ color: 'var(--accent-blue)' }}>SUCCESS</span>
               </div>
@@ -817,28 +1059,24 @@ export default function App() {
         </div>
 
       </div>
-
-      {/* Anomaly Drift Simulator Controller */}
-      <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-subtle)' }}>
-        <div>
-          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>SIMULATE BREACH</span>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>Triggers O₂ depletion loop</div>
-        </div>
-        <label className="ios-switch">
-          <input 
-            type="checkbox" 
-            checked={mockAnomaly} 
-            onChange={(e) => setMockAnomaly(e.target.checked)} 
-          />
-          <span className="ios-slider"></span>
-        </label>
-      </div>
     </div>
   );
 
+  const getFirebaseStatusColor = () => {
+    if (firebaseStatus === 'CONNECTED') return 'var(--color-success)';
+    if (firebaseStatus === 'WAITING_FOR_DATA') return 'var(--color-warning)';
+    return 'var(--color-critical)';
+  };
+
+  const getFirebaseStatusText = () => {
+    if (firebaseStatus === 'CONNECTED') return 'CONNECTED';
+    if (firebaseStatus === 'WAITING_FOR_DATA') return 'WAITING FOR DATA';
+    return 'DISCONNECTED';
+  };
+
   const firebaseCard = (
     <div className="status-grid-item" style={{ width: '100%' }}>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={firebaseConnected ? 'var(--color-success)' : 'var(--color-critical)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={getFirebaseStatusColor()} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12.55a11 11 0 0 1 14.08 0" />
         <path d="M1.42 9a16 16 0 0 1 21.16 0" />
         <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
@@ -846,40 +1084,97 @@ export default function App() {
       </svg>
       <div className="status-grid-label-group">
         <span className="status-grid-label">Firebase Database</span>
-        <span className="status-grid-value" style={{ color: firebaseConnected ? 'var(--color-success)' : 'var(--color-critical)' }}>
-          {firebaseConnected ? 'CONNECTED' : 'DISCONNECTED'}
+        <span className="status-grid-value" style={{ color: getFirebaseStatusColor() }}>
+          {getFirebaseStatusText()}
         </span>
       </div>
     </div>
   );
 
-  const sensorStatusCard = (
-    <div className="status-grid-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px', width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-          <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-        </svg>
-        <div className="status-grid-label-group">
-          <span className="status-grid-label">Sensor Status</span>
-          <span className="status-grid-value" style={{ color: deviceStatus?.status === 'Online' ? 'var(--color-success)' : 'var(--color-critical)' }}>
-            {deviceStatus ? deviceStatus.status.toUpperCase() : 'OFFLINE'}
-          </span>
+  const sensorStatusCard = useMemo(() => {
+    const batteryStr = deviceStatus?.battery ?? '98%';
+    const batteryPct = parseInt(batteryStr) || 100;
+    const batteryColor = batteryPct < 20 
+      ? 'var(--color-critical)' 
+      : batteryPct < 50 
+        ? 'var(--color-warning)' 
+        : 'var(--text-primary)';
+
+    const rssiVal = deviceStatus?.status === 'Online' ? -62 : -100;
+    const rssiStr = deviceStatus?.status === 'Online' ? `${rssiVal} dBm` : 'N/A';
+    const rssiColor = rssiVal <= -85 
+      ? 'var(--color-critical)' 
+      : rssiVal <= -75 
+        ? 'var(--color-warning)' 
+        : 'var(--text-primary)';
+
+    const commTime = (deviceStatus && deviceStatus.lastUpdated) 
+      ? new Date(deviceStatus.lastUpdated).toLocaleTimeString() 
+      : systemTime.toLocaleTimeString();
+
+    return (
+      <div className="status-grid-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+          </svg>
+          <div className="status-grid-label-group">
+            <span className="status-grid-label">Sensor Status</span>
+            <span className="status-grid-value" style={{ color: deviceStatus?.status === 'Online' ? 'var(--color-success)' : 'var(--color-critical)' }}>
+              {deviceStatus ? deviceStatus.status.toUpperCase() : 'OFFLINE'}
+            </span>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '20px', fontSize: '0.68rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '8px', width: '100%' }}>
+          {/* Left Column - Hardware */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.62rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Hardware</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Controller:</span>
+              <strong style={{ color: 'var(--text-primary)' }}>ESP32 Node</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>DHT Sensor:</span>
+              <strong style={{ color: 'var(--color-success)' }}>ACTIVE</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>MQ135 Gas:</span>
+              <strong style={{ color: 'var(--color-success)' }}>CALIBRATED</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Firmware:</span>
+              <strong style={{ color: 'var(--text-primary)' }}>v1.0.8</strong>
+            </div>
+          </div>
+
+          {/* Right Column - Connection & Power */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.62rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Link & Power</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>WiFi Link:</span>
+              <strong style={{ color: deviceStatus?.status === 'Online' ? 'var(--color-success)' : 'var(--color-critical)' }}>
+                {deviceStatus?.status === 'Online' ? 'CONNECTED' : 'DISCONNECTED'}
+              </strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>RSSI:</span>
+              <strong style={{ color: rssiColor }}>{rssiStr}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Battery:</span>
+              <strong style={{ color: batteryColor }}>{batteryStr}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Comm:</span>
+              <strong style={{ color: 'var(--text-primary)' }}>{commTime}</strong>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: '0.68rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '6px', width: '100%' }}>
-        <span>Controller: <strong style={{ color: 'var(--text-primary)' }}>ESP32 Node</strong></span>
-        <span>DHT Sensor: <strong style={{ color: 'var(--color-success)' }}>ACTIVE</strong></span>
-        <span>MQ135 Gas: <strong style={{ color: 'var(--color-success)' }}>CALIBRATED</strong></span>
-        <span>WiFi Link: <strong style={{ color: 'var(--color-success)' }}>CONNECTED</strong></span>
-        <span>RSSI: <strong style={{ color: 'var(--text-primary)' }}>-62 dBm</strong></span>
-        <span>Battery: <strong style={{ color: 'var(--text-primary)' }}>98%</strong></span>
-        <span>Firmware: <strong style={{ color: 'var(--text-primary)' }}>v1.0.8</strong></span>
-        <span>Comm: <strong style={{ color: 'var(--text-primary)' }}>{(deviceStatus && deviceStatus.lastUpdated) ? new Date(deviceStatus.lastUpdated).toLocaleTimeString() : systemTime.toLocaleTimeString()}</strong></span>
-      </div>
-    </div>
-  );
+    );
+  }, [deviceStatus, systemTime]);
 
   const recCard = (
     <div className="status-grid-item rec-card" style={{ flexGrow: 1, width: '100%' }}>
@@ -970,6 +1265,19 @@ export default function App() {
                 <span>WRK: <strong style={{ color: health.worker?.active ? 'var(--color-success)' : 'var(--text-secondary)' }}>{health.worker?.active ? 'ACTIVE' : 'INACTIVE'}</strong></span>
               </div>
             )}
+            {/* DB Link Indicator */}
+            <div className="status-indicator">
+              <span className={`status-dot ${firebaseStatus === 'CONNECTED' ? 'active' : firebaseStatus === 'WAITING_FOR_DATA' ? 'warning' : 'critical'}`} />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>DB: <strong style={{ color: firebaseStatus === 'CONNECTED' ? 'var(--color-success)' : firebaseStatus === 'WAITING_FOR_DATA' ? 'var(--color-warning)' : 'var(--color-critical)' }}>{firebaseStatus === 'CONNECTED' ? 'ONLINE' : firebaseStatus === 'WAITING_FOR_DATA' ? 'WAITING' : 'OFFLINE'}</strong></span>
+            </div>
+
+            {/* Sensor Link Indicator */}
+            <div className="status-indicator">
+              <span className={`status-dot ${deviceStatus?.status === 'Online' ? 'active' : 'critical'}`} />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>SENSOR: <strong style={{ color: deviceStatus?.status === 'Online' ? 'var(--color-success)' : 'var(--color-critical)' }}>{deviceStatus?.status === 'Online' ? 'ONLINE' : 'OFFLINE'}</strong></span>
+            </div>
+
+            {/* Live Indicator */}
             <div className="status-indicator">
               <span className={`status-dot active pulse`} />
               <span>LIVE</span>
@@ -1016,13 +1324,25 @@ export default function App() {
             <span>
               {overallSafety === 'critical' 
                 ? 'CRITICAL CHAMBER BREACH: ENVIRONMENTAL CRITICAL ALARM ACTIVE!' 
-                : overallSafety === 'warning' 
-                  ? 'WARNING LEVEL BREACH: SENSORS REPORTING OUT OF NOMINAL BOUNDS.' 
-                  : 'SYSTEM SECURE: ALL ENVIRONMENTAL SAFETY PARAMETERS NOMINAL.'}
+                : (firebaseStatus !== 'CONNECTED' || !deviceStatus || deviceStatus.status !== 'Online')
+                  ? `DEGRADED MONITORING: ${
+                      firebaseStatus !== 'CONNECTED' 
+                        ? 'FIREBASE DATABASE OFFLINE' 
+                        : 'CHAMBER SENSOR NODE OFFLINE'
+                    }. REAL-TIME TELEMETRY IS INACTIVE.`
+                  : overallSafety === 'warning' 
+                    ? 'WARNING LEVEL BREACH: SENSORS REPORTING OUT OF NOMINAL BOUNDS.' 
+                    : 'SYSTEM SECURE: ALL ENVIRONMENTAL SAFETY PARAMETERS NOMINAL.'}
             </span>
           </div>
           <span className={`hud-pill ${overallSafety}`}>
-            {overallSafety === 'critical' ? 'CRITICAL' : overallSafety === 'warning' ? 'WARNING' : 'SAFE'}
+            {overallSafety === 'critical' 
+              ? 'CRITICAL' 
+              : (firebaseStatus !== 'CONNECTED' || !deviceStatus || deviceStatus.status !== 'Online')
+                ? 'DEGRADED'
+                : overallSafety === 'warning' 
+                  ? 'WARNING' 
+                  : 'SAFE'}
           </span>
         </div>
 

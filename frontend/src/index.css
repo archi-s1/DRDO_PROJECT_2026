@@ -283,6 +283,16 @@ body {
   box-shadow: 0 0 10px var(--color-success);
 }
 
+.status-dot.warning {
+  background-color: var(--color-warning);
+  box-shadow: 0 0 10px var(--color-warning);
+}
+
+.status-dot.critical {
+  background-color: var(--color-critical);
+  box-shadow: 0 0 10px var(--color-critical);
+}
+
 .status-dot.pulse::after {
   content: '';
   position: absolute;

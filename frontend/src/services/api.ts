@@ -12,13 +12,14 @@ const unwrap = async (res: Response) => {
 export const getSensorData = async () => {
   const snapshot = await get(ref(database, "sensors/current"));
   if (snapshot.exists()) {
-    return snapshot.val();
+    return { ...snapshot.val(), exists: true };
   }
   return {
     oxygen: 0,
     temperature: 0,
     humidity: 0,
-    timestamp: null
+    timestamp: null,
+    exists: false
   };
 };
 
@@ -50,7 +51,7 @@ export const getSensorHistory = async () => {
   if (snapshot.exists()) {
     const val = snapshot.val();
     const dataList = Object.keys(val).map(key => val[key]);
-    dataList.sort((a: any, b: any) => {
+    dataList.sort((a: { timestamp?: string }, b: { timestamp?: string }) => {
       const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
       const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
       return timeB - timeA;
@@ -68,7 +69,7 @@ export const getAlertHistory = async () => {
 
     const alerts = Object.keys(val).map(key => val[key]);
 
-    alerts.sort((a: any, b: any) => {
+    alerts.sort((a: { timestamp?: string }, b: { timestamp?: string }) => {
         const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
         const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
         return tb - ta;
