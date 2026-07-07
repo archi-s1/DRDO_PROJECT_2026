@@ -863,7 +863,7 @@ export default function App() {
         <div style={{ height: '240px', width: '100%', position: 'relative' }}>
           <ResponsiveContainer width="100%" height="100%">
             {predictionChartType === 'area' ? (
-              <AreaChart data={predictionChartData} margin={{ top: 18, right: 10, left: -25, bottom: 0 }}>
+              <AreaChart data={predictionChartData} margin={{ top: 18, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="predictionAreaGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#22D3EE" stopOpacity={0.20}/>
@@ -886,6 +886,7 @@ export default function App() {
                   tickLine={false} 
                   axisLine={false} 
                   dx={-5}
+                  width={35}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }} />
                 <ReferenceLine 
@@ -941,7 +942,7 @@ export default function App() {
                 />
               </AreaChart>
             ) : (
-              <LineChart data={predictionChartData} margin={{ top: 18, right: 10, left: -25, bottom: 0 }}>
+              <LineChart data={predictionChartData} margin={{ top: 18, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid stroke="rgba(255, 255, 255, 0.04)" strokeDasharray="3 3" vertical={false} />
                 <XAxis 
                   dataKey="time" 
@@ -958,6 +959,7 @@ export default function App() {
                   tickLine={false} 
                   axisLine={false} 
                   dx={-5}
+                  width={35}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }} />
                 <ReferenceLine 
