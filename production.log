@@ -1,0 +1,35 @@
+2026-07-07 12:45:09 [INFO] ============================================================
+2026-07-07 12:45:09 [INFO] PHASE 5 — TEST MODE (single cycle, no Firebase write)
+2026-07-07 12:45:09 [INFO] ============================================================
+2026-07-07 12:45:09 [INFO] Loading models from disk...
+2026-07-07 12:45:10 [INFO]   Loaded: model_xgb_5min.pkl
+2026-07-07 12:45:10 [INFO]   Loaded: model_xgb_10min.pkl
+2026-07-07 12:45:11 [INFO]   Loaded: anomaly_iso_model.pkl
+2026-07-07 12:45:11 [INFO]   CUSUM slack=0.0765  threshold=0.7649
+2026-07-07 12:45:11 [INFO] All models loaded successfully.
+2026-07-07 12:45:11 [INFO] Running single test cycle...
+2026-07-07 12:45:12 [INFO] 
+TEST CYCLE RESULT:
+2026-07-07 12:45:12 [INFO]   timestamp                    : 2026-07-07T07:15:11.054859+00:00
+2026-07-07 12:45:12 [INFO]   oxygen_current               : 20.9862
+2026-07-07 12:45:12 [INFO]   temperature_current          : 21.889
+2026-07-07 12:45:12 [INFO]   humidity_current             : 58.16
+2026-07-07 12:45:12 [INFO]   oxygen_forecast_5min         : 20.9648
+2026-07-07 12:45:12 [INFO]   oxygen_forecast_10min        : 20.9882
+2026-07-07 12:45:12 [INFO]   iso_score                    : 0.031859
+2026-07-07 12:45:12 [INFO]   cusum_score                  : 0.0
+2026-07-07 12:45:12 [INFO]   is_anomaly_iso               : 0
+2026-07-07 12:45:12 [INFO]   is_anomaly_cusum             : 0
+2026-07-07 12:45:12 [INFO]   final_anomaly                : 0
+2026-07-07 12:45:12 [INFO]   rec_severity                 : OK
+2026-07-07 12:45:12 [INFO]   rec_message                  : Air quality normal.
+2026-07-07 12:45:12 [INFO]   rec_buzzer                   : none
+2026-07-07 12:45:12 [INFO]   rec_action_code              : 0
+2026-07-07 12:45:12 [INFO]   cycle_number                 : 0
+2026-07-07 12:45:12 [INFO]   cycle_latency_sec            : 1.54
+2026-07-07 12:45:12 [INFO]   model_version                : xgb_v1_phase3
+2026-07-07 12:45:12 [INFO]   records_used                 : 25
+2026-07-07 12:45:12 [INFO] 
+TEST PASSED — Production loop is ready to run.
+2026-07-07 12:45:12 [INFO] Run without --test to start the full loop:
+2026-07-07 12:45:12 [INFO]   python phase5_production_loop.py

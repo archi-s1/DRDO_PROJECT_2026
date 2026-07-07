@@ -24,3 +24,5 @@ python phase3_model_training.py
 python verify_predictions.py
 
 python phase4_anomaly_detection.py
+
+python phase5_production_loop.py --test

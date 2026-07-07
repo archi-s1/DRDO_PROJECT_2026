@@ -6,7 +6,7 @@ from firebase_admin import db
 cred = credentials.Certificate("serviceAccountKey.json")
 
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://esp32-iot-aaa4a-default-rtdb.asia-southeast1.firebasedatabase.app'
+    'databaseURL': 'https://iot-cfees-default-rtdb.asia-southeast1.firebasedatabase.app'
 })
 
 # Create database structure
