@@ -534,7 +534,12 @@ export default function App() {
     });
 
     const histPath = histPoints.reduce((acc, p, idx) => idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '');
-    const predPath = predPoints.length > 0 ? `M ${histPoints[histPoints.length - 1].x} ${histPoints[histPoints.length - 1].y} ` + predPoints.reduce((acc, p) => `${acc} L ${p.x} ${p.y}`, '') : '';
+    const predPath = predPoints.length > 0 
+      ? (histPoints.length > 0 
+          ? `M ${histPoints[histPoints.length - 1].x} ${histPoints[histPoints.length - 1].y} ` 
+          : `M ${predPoints[0].x} ${predPoints[0].y} `) 
+        + predPoints.reduce((acc, p) => `${acc} L ${p.x} ${p.y}`, '') 
+      : '';
 
     const upperPoints = predPoints.map((p, idx) => {
       const deviation = 0.12 * (idx + 1);
@@ -552,8 +557,8 @@ export default function App() {
 
     let confidenceBand = '';
     if (upperPoints.length > 0) {
-      const startX = histPoints[histPoints.length - 1].x;
-      const startY = histPoints[histPoints.length - 1].y;
+      const startX = histPoints.length > 0 ? histPoints[histPoints.length - 1].x : upperPoints[0].x;
+      const startY = histPoints.length > 0 ? histPoints[histPoints.length - 1].y : upperPoints[0].y;
       const upperStr = upperPoints.reduce((acc, p) => `${acc} L ${p.x} ${p.y}`, `M ${startX} ${startY}`);
       const lowerStr = [...lowerPoints].reverse().reduce((acc, p) => `${acc} L ${p.x} ${p.y}`, '');
       confidenceBand = `${upperStr} ${lowerStr} Z`;
