@@ -43,6 +43,19 @@ function getPercent(val: number, min: number, max: number) {
   return Math.min(100, Math.max(0, pct));
 }
 
+const formatTimeSafe = (timestamp: any) => {
+  if (!timestamp) return '--:--:--';
+  const d = typeof timestamp === 'object' && timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return isNaN(d.getTime()) ? '--:--:--' : d.toLocaleTimeString();
+};
+
+const formatTime2DigitSafe = (timestamp: any) => {
+  if (!timestamp) return '--:--';
+  const d = typeof timestamp === 'object' && timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+
 interface Alert {
   id: number;
   message: string;
@@ -189,7 +202,10 @@ export default function App() {
               setOxygenHistory(prev => [...prev.slice(1), o2Val]);
               setTempHistory(prev => [...prev.slice(1), tempVal]);
               setHumidityHistory(prev => [...prev.slice(1), humVal]);
-              setSystemTime(new Date(sensorData.timestamp));
+              
+              const timestamp = sensorData.timestamp ? new Date(sensorData.timestamp) : new Date();
+              setSystemTime(isNaN(timestamp.getTime()) ? new Date() : timestamp);
+              
               setFirebaseStatus('CONNECTED');
               setLastSyncTime(new Date().toLocaleTimeString());
             }
@@ -327,9 +343,10 @@ export default function App() {
   };
 
   const mockEventTimes = useMemo(() => {
+    const timeMs = systemTime && !isNaN(systemTime.getTime()) ? systemTime.getTime() : Date.now();
     return {
-      t5s: new Date(systemTime.getTime() - 5000).toLocaleTimeString(),
-      t10s: new Date(systemTime.getTime() - 10000).toLocaleTimeString()
+      t5s: new Date(timeMs - 5000).toLocaleTimeString(),
+      t10s: new Date(timeMs - 10000).toLocaleTimeString()
     };
   }, [systemTime]);
 
@@ -955,7 +972,7 @@ export default function App() {
           ) : (
             events.slice(0, 5).map((evt, idx) => (
               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem' }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>[{new Date(evt.timestamp).toLocaleTimeString()}]</span>
+                <span style={{ color: 'var(--text-tertiary)' }}>[{formatTimeSafe(evt.timestamp)}]</span>
                 <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>{evt.event}</span>
                 <span style={{ color: evt.event.includes('STARTUP') || evt.event.includes('NOMINAL') ? 'var(--color-success)' : 'var(--color-warning)' }}>
                   {evt.event.includes('STARTUP') ? 'OK' : 'ACTIVE'}
@@ -995,7 +1012,7 @@ export default function App() {
                 <div className="alert-message">{alert.message}</div>
               </div>
               <div className="alert-time">
-                {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {formatTime2DigitSafe(alert.timestamp)}
               </div>
               <button className="ack-btn" onClick={() => handleAcknowledgeAlert(alert.id)}>ACK</button>
             </div>
@@ -1104,8 +1121,8 @@ export default function App() {
         : 'var(--text-primary)';
 
     const commTime = (deviceStatus && deviceStatus.lastUpdated) 
-      ? new Date(deviceStatus.lastUpdated).toLocaleTimeString() 
-      : systemTime.toLocaleTimeString();
+      ? formatTimeSafe(deviceStatus.lastUpdated) 
+      : formatTimeSafe(systemTime);
 
     return (
       <div className="status-grid-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px', width: '100%' }}>
