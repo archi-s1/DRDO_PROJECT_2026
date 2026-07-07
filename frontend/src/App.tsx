@@ -49,7 +49,9 @@ interface Alert {
   severity: string;
   timestamp: string;
   acknowledged?: number | boolean;
+  status?: string;
 }
+
 
 interface Recommendation {
   text: string;
@@ -101,7 +103,7 @@ export default function App() {
   
   // Interactive trends chart tabs
   const [activeTrendTab, setActiveTrendTab] = useState<'oxygen' | 'temperature' | 'humidity'>('oxygen');
-  const [timeFilter, setTimeFilter] = useState<'1h' | '6h' | '24h' | '7d' | '30d'>('24h');
+  const [timeFilter, setTimeFilter] = useState<'5m' | '10m'>('10m');
   
   // Real-time sensor state variables
   const [oxygen, setOxygen] = useState(20.8);
@@ -356,8 +358,9 @@ export default function App() {
 
   // Status thresholds check
   const o2Status = useMemo(() => {
-    if (oxygen >= 19.5 && oxygen <= 23.5) return 'normal';
-    return 'critical';
+    if (oxygen < 19.5 || oxygen > 23.5) return 'critical';
+    if (oxygen < 20.0 || oxygen > 23.0) return 'warning';
+    return 'normal';
   }, [oxygen]);
 
   const tempStatus = useMemo(() => {
@@ -413,9 +416,8 @@ export default function App() {
   }, [activeTrendTab, oxygenHistory, tempHistory, humidityHistory]);
 
   const timeFilteredData = useMemo(() => {
-    if (timeFilter === '1h') return selectedTrendData.slice(-5);
-    if (timeFilter === '6h') return selectedTrendData.slice(-10);
-    return selectedTrendData;
+    if (timeFilter === '5m') return selectedTrendData.slice(-5);
+    return selectedTrendData.slice(-10);
   }, [selectedTrendData, timeFilter]);
 
   const trendRange = useMemo(() => {
@@ -741,13 +743,13 @@ export default function App() {
           </div>
 
           <div className="chart-filters">
-            {(['1h', '6h', '24h', '7d', '30d'] as const).map(f => (
+            {(['5m', '10m'] as const).map(f => (
               <button 
                 key={f} 
                 className={`filter-btn ${timeFilter === f ? 'active' : ''}`}
                 onClick={() => setTimeFilter(f)}
               >
-                {f.toUpperCase()}
+                {f === '5m' ? '5 MIN' : '10 MIN'}
               </button>
             ))}
           </div>

@@ -54,11 +54,24 @@ graph TD
 
 ---
 
+## 📊 Operational Safety Thresholds
+
+The system monitors three primary atmospheric metrics and classifies chamber health status into three distinct severity tiers (Nominal, Warning, and Critical). Both the frontend control client and backend engines adhere to these thresholds:
+
+| Telemetry Metric | Safe / Nominal Range | Warning Thresholds | Critical Thresholds |
+| :--- | :--- | :--- | :--- |
+| **Oxygen Concentration (O₂)** | $20.0\% \le \text{O}_2 \le 23.0\%$ | $19.5\% \le \text{O}_2 < 20.0\%$ <br> $23.0\% < \text{O}_2 \le 23.5\%$ | $\text{O}_2 < 19.5\%$ <br> $\text{O}_2 > 23.5\%$ |
+| **Chamber Temperature** | $\le 28^\circ\text{C}$ | $28^\circ\text{C} < \text{Temp} \le 32^\circ\text{C}$ | $> 32^\circ\text{C}$ |
+| **Relative Humidity** | $\le 55\%$ | $55\% < \text{Humidity} \le 60\%$ | $> 60\%$ |
+
+---
+
+
 ## ⚙️ Tech Stack
 
-* **Frontend:** React 18, TypeScript, Vite, SVG Charts, Vanilla CSS (Tactical Glow Theme)
-* **Backend:** Node.js, Express.js
-* **Database:** SQLite3, Node-SQLite driver
+* **Frontend:** React 19, TypeScript, Vite, SVG Charts, Vanilla CSS (Tactical Glow Theme)
+* **Backend:** Node.js, Express.js (provides predictions, recommendations, and analytics APIs)
+* **Database & Sync:** Firebase Realtime Database (for real-time telemetry updates and active alerts)
 * **Simulation:** Async Background Log Loop (5-second intervals)
 
 ---
@@ -134,14 +147,27 @@ o2-sentinel-frontend/
    > [!NOTE]
    > The server automatically initializes the SQLite database file (`backend/database/database.db`), runs migrations, mounts indexes, starts the background logging daemon, and listens on `http://localhost:5000`.
 
-3. **Boot the Frontend Dashboard Client:**
+3. **Configure & Boot the Frontend Dashboard Client:**
+   First, ensure you have a `.env` file configured in the `frontend` folder containing your Firebase Realtime Database project credentials:
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   VITE_FIREBASE_DATABASE_URL=your_database_url
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   ```
+
+   Then run:
    ```bash
    cd ../frontend
    npm install
    npm run dev
    ```
    > [!NOTE]
-   > The Vite developer client will start the interactive UI dashboard on `http://localhost:5173`.
+   > The Vite developer client initializes Firebase Realtime Database to pull current sensor data and listen to active alarms, starting the interactive dashboard on `http://localhost:5173`.
 
 ---
 

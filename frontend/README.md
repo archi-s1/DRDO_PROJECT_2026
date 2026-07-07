@@ -18,7 +18,7 @@ O₂ Sentinel is a state-of-the-art, premium environmental telemetry dashboard b
 *   **Live Digital Log Console**: Features an auto-scrolling terminal feed documenting every telemetry sync checklist event.
 
 ### 3. Lightweight Custom SVG Data Visualizations
-*   **Trend Sparklines (`src/dashboard/components/TrendChart.jsx`)**: Responsive SVG line graphs with custom time-ranges (`1h`, `6h`, `24h`), shaded acceptable safe-zone bands, grid lines, and real-time pulsing cursor points.
+*   **Trend Sparklines (`src/dashboard/components/TrendChart.jsx`)**: Responsive SVG line graphs with custom time-ranges (`5 min`, `10 min`), shaded acceptable safe-zone bands, grid lines, and real-time pulsing cursor points.
 *   **Predictive Analysis Chart (`src/dashboard/components/PredictionChart.jsx`)**: Maps past historical data against forward-looking projections (+30 and +60 minutes) bounded by a custom-shaded statistical confidence funnel showing widening variance in future projections.
 
 ### 4. Modular Dashboard Components
@@ -34,6 +34,8 @@ O₂ Sentinel is a state-of-the-art, premium environmental telemetry dashboard b
 *   **Build Tool**: Vite 8 & npm
 *   **Styles**: Pure CSS3 (custom custom-properties / variables, no Tailwind CSS or heavy external libraries)
 *   **Charts**: Custom, inline responsive SVG generation (zero bulky graphing library dependencies)
+*   **Real-time Database**: Firebase Realtime Database (for active alarm subscriptions and live sensor feeds)
+
 
 ---
 
@@ -68,7 +70,20 @@ Clone the repository and install the development dependencies:
 npm install
 ```
 
-### 2. Start Local Dev Server
+### 2. Configure Environment Variables
+Create a `.env` file in the root of the `frontend/` directory and populate it with your Firebase configuration variables:
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_DATABASE_URL=your_database_url
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+### 3. Start Local Dev Server
 Launch Vite's hot-reloading development environment:
 ```bash
 npm run dev
