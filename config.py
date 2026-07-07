@@ -37,6 +37,18 @@ DB_PATHS = {
 # None = use all records regardless of source
 DATA_SOURCE_FILTER = ["synthetic"]      # ← update as real data arrives
 
+
+'''
+# Change from:
+DATA_SOURCE_FILTER = ["synthetic"]
+
+# To (mixed training - first week of real data):
+DATA_SOURCE_FILTER = ["synthetic", "esp32_main_01"]
+
+# To (real only - final paper results):
+DATA_SOURCE_FILTER = ["esp32_main_01"]
+'''
+
 # ESP32 device ID (must match what the hardware sends)
 ESP32_DEVICE_ID = "esp32_main_01"
 
