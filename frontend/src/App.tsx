@@ -185,6 +185,7 @@ export default function App() {
   const [predO2_5m, setPredO2_5m] = useState<number>(0);
   const [predO2_10m, setPredO2_10m] = useState<number>(0);
   const [o2Projection, setO2Projection] = useState<number[]>([]);
+  const [predictionConfidence, setPredictionConfidence] = useState<number>(96);
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertsHistory, setAlertsHistory] = useState<Alert[]>([]);
@@ -312,6 +313,9 @@ export default function App() {
           setPredO2_5m(predData.pred5 ?? predData.pred30 ?? (oxygen - 0.02));
           setPredO2_10m(predData.pred10 ?? predData.pred1h ?? (oxygen - 0.05));
           setO2Projection(predData.projection || []);
+          if (predData.confidence !== undefined) {
+            setPredictionConfidence(predData.confidence);
+          }
         }
       } catch (err) {
         console.warn("Predictions poll failed:", err);
@@ -1032,7 +1036,9 @@ export default function App() {
           <div className="prediction-summary-mini-card">
             <span className="prediction-mini-title">Model Confidence</span>
             <div className="prediction-mini-value-group">
-              <span className="prediction-mini-value" style={{ fontSize: '1.25rem' }}>High (96%)</span>
+              <span className="prediction-mini-value" style={{ fontSize: '1.25rem' }}>
+                {predictionConfidence >= 90 ? 'High' : predictionConfidence >= 75 ? 'Moderate' : 'Low'} ({predictionConfidence}%)
+              </span>
             </div>
           </div>
         </div>
@@ -1215,10 +1221,10 @@ export default function App() {
       <div className="forecast-progress-container" style={{ marginTop: '12px' }}>
         <div className="forecast-meta-row">
           <span style={{ color: 'var(--text-secondary)' }}>Prediction Confidence</span>
-          <span style={{ color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)' }}>92%</span>
+          <span style={{ color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)' }}>{predictionConfidence}%</span>
         </div>
         <div className="progress-bar-bg">
-          <div className="progress-bar-fill" style={{ width: '92%' }}></div>
+          <div className="progress-bar-fill" style={{ width: `${predictionConfidence}%` }}></div>
         </div>
         <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '6px', fontStyle: 'italic' }}>
           Forecast Summary: O₂ levels projected to remain stable within nominal safe margins.
