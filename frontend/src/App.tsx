@@ -454,6 +454,9 @@ export default function App() {
     const data: any[] = [];
     const histSlice = oxygenHistory.slice(-5); // last 5 points of history
     
+    // Fallback current value to predO2_5m or nominal 20.9% if live telemetry hasn't loaded (is 0)
+    const currentVal = oxygen > 0 ? oxygen : (predO2_5m > 0 ? predO2_5m : 20.9);
+
     // 1. Add historical readings
     histSlice.forEach((val, idx) => {
       const isNow = idx === histSlice.length - 1;
@@ -470,14 +473,14 @@ export default function App() {
     if (data.length === 0) {
       data.push({
         time: "Now",
-        oxygen: Number(oxygen.toFixed(2)),
-        predicted: Number(oxygen.toFixed(2))
+        oxygen: Number(currentVal.toFixed(2)),
+        predicted: Number(currentVal.toFixed(2))
       });
     }
 
     // 2. Add projection points (+5 and +10 mins)
-    const next5 = o2Projection[0] ?? predO2_5m ?? (oxygen - 0.02);
-    const next10 = o2Projection[1] ?? predO2_10m ?? (oxygen - 0.05);
+    const next5 = o2Projection[0] ?? predO2_5m ?? (currentVal - 0.02);
+    const next10 = o2Projection[1] ?? predO2_10m ?? (currentVal - 0.05);
 
     data.push({
       time: "+5",

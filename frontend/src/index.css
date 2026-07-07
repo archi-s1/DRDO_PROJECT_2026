@@ -956,6 +956,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 2px;
+  white-space: nowrap;
 }
 
 .prediction-mini-value {
