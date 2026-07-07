@@ -446,16 +446,48 @@ export default function App() {
 
 
   const predictionChartData = useMemo(() => {
-    return [
-      { time: "-20", oxygen: 20.82, predicted: null },
-      { time: "-15", oxygen: 20.79, predicted: null },
-      { time: "-10", oxygen: 20.76, predicted: null },
-      { time: "-5", oxygen: 20.74, predicted: null },
-      { time: "Now", oxygen: 20.72, predicted: 20.72 },
-      { time: "+5", oxygen: null, predicted: 20.69 },
-      { time: "+10", oxygen: null, predicted: 20.63 }
-    ];
-  }, []);
+    const data: any[] = [];
+    const histSlice = oxygenHistory.slice(-5); // last 5 points of history
+    
+    // 1. Add historical readings
+    histSlice.forEach((val, idx) => {
+      const isNow = idx === histSlice.length - 1;
+      const minsAgo = (histSlice.length - 1 - idx) * 5;
+      const timeLabel = isNow ? "Now" : `-${minsAgo}`;
+      data.push({
+        time: timeLabel,
+        oxygen: Number(val.toFixed(2)),
+        predicted: isNow ? Number(val.toFixed(2)) : null
+      });
+    });
+
+    // If history is empty, push a fallback "Now" item with current oxygen
+    if (data.length === 0) {
+      data.push({
+        time: "Now",
+        oxygen: Number(oxygen.toFixed(2)),
+        predicted: Number(oxygen.toFixed(2))
+      });
+    }
+
+    // 2. Add projection points (+5 and +10 mins)
+    const next5 = o2Projection[0] ?? predO2_5m ?? (oxygen - 0.02);
+    const next10 = o2Projection[1] ?? predO2_10m ?? (oxygen - 0.05);
+
+    data.push({
+      time: "+5",
+      oxygen: null,
+      predicted: Number(next5.toFixed(2))
+    });
+
+    data.push({
+      time: "+10",
+      oxygen: null,
+      predicted: Number(next10.toFixed(2))
+    });
+
+    return data;
+  }, [oxygenHistory, o2Projection, predO2_5m, predO2_10m, oxygen]);
 
   // Custom Trend Line Plotter
   const selectedTrendData = useMemo(() => {
@@ -926,7 +958,7 @@ export default function App() {
           <div className="prediction-summary-mini-card">
             <span className="prediction-mini-title">Prediction +5 min</span>
             <div className="prediction-mini-value-group">
-              <span className="prediction-mini-value">20.69</span>
+              <span className="prediction-mini-value">{predO2_5m ? predO2_5m.toFixed(2) : '0.00'}</span>
               <span className="prediction-mini-unit">%</span>
             </div>
           </div>
@@ -934,7 +966,7 @@ export default function App() {
           <div className="prediction-summary-mini-card">
             <span className="prediction-mini-title">Prediction +10 min</span>
             <div className="prediction-mini-value-group">
-              <span className="prediction-mini-value">20.63</span>
+              <span className="prediction-mini-value">{predO2_10m ? predO2_10m.toFixed(2) : '0.00'}</span>
               <span className="prediction-mini-unit">%</span>
             </div>
           </div>
