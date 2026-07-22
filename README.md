@@ -90,6 +90,14 @@ Firebase /sensors  →  Fetch 25 records  →  Resample to 5-min
 
 ## 3. Hardware Setup
 
+
+<br>
+
+<img src="./assets/hardware.jpeg" alt="DRDO IoT Hardware Prototype" width="900"/>
+
+<br>
+
+
 | Component | Model | Purpose | Connected To |
 |---|---|---|---|
 | ESP32 Dev Board | ESP32-WROOM-32 | Main controller, WiFi, sensor reads | — |
