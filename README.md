@@ -93,7 +93,7 @@ Firebase /sensors  →  Fetch 25 records  →  Resample to 5-min
 
 <br>
 
-<img src="./assets/hardware.jpeg" alt="DRDO IoT Hardware Prototype" width="900"/>
+<img src="./assests/hardware.jpeg" alt="DRDO IoT Hardware Prototype" width="900"/>
 
 <br>
 
