@@ -91,11 +91,11 @@ Firebase /sensors  →  Fetch 25 records  →  Resample to 5-min
 ## 3. Hardware Setup
 
 
-<br>
 
-<img src="./assests/hardware.jpeg" alt="DRDO IoT Hardware Prototype" width="900"/>
 
-<br>
+
+
+
 
 
 | Component | Model | Purpose | Connected To |
